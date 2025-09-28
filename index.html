@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUT Academic Workload Calculator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #000000, #000000);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .tabs {
+            display: flex;
+            background: #e5e7eb;
+        }
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            transition: all 0.3s ease;
+        }
+        .tab:hover {
+            background: #d1d5db;
+        }
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #868686;
+        }
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section h3 {
+            margin: 0 0 15px 0;
+            color: #1f2937;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .form-row > * {
+            flex: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #374151;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #000000;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+        .btn {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover {
+            background: #000000;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: #6b7280;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        .unit-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+        }
+        .unit-card.active {
+            border-color: #000000;
+        }
+        .unit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .unit-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1f2937;
+        }
+        .remove-unit {
+            background: #920000;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .remove-unit:hover {
+            background: #920000;
+        }
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .summary-table th,
+        .summary-table td {
+            border: 1px solid #d1d5db;
+            padding: 12px;
+            text-align: left;
+        }
+        .summary-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+        }
+        .summary-table tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .total-row {
+            background: #dbeafe !important;
+            font-weight: bold;
+        }
+        .hours-input {
+            width: 80px;
+        }
+        .parameter-info {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .alert-info {
+            background: #cecdcd;
+            border: 1px solid #020000;
+            color: #000000;
+        }
+        .alert-success {
+            background: #d1fae5;
+            border: 1px solid #059669;
+            color: #065f46;
+        }
+        .alert-warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>QUT Academic Learning & Teaching Workload Calculator</h1>
+            <p>Created based on the latest published AL&T model (2025). This is purely for the purposes of experimenting with how the model affects your teaching workload, and should not be treated as replacing your official workload document.</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('employment')">Employment & Allocations</button>
+            <button class="tab" onclick="showTab('units')">Units & Activities</button>
+            <button class="tab" onclick="showTab('personalised')">Personalised Hours</button>
+            <button class="tab" onclick="showTab('summary')">Summary & Analysis</button>
+        </div>
+        
+        <!-- Employment & Allocations Tab -->
+        <div id="employment" class="tab-content active">
+            <div class="section">
+                <h3>Your Employment Details</h3>
+                <p>Enter your employment details to analyze whether your teaching allocation aligns with your expected workload.</p>
+                
+                <div class="form-row">
+                    <div>
+                        <label>Employment FTE:</label>
+                        <input type="number" id="fte" min="0.1" max="1.0" step="0.1" value="1.0" onchange="updateWorkloadAnalysis()">
+                        <div class="parameter-info">e.g., 1.0 for full-time, 0.5 for half-time</div>
+                    </div>
+                    <div>
+                        <label>L&T Allocation (%):</label>
+                        <input type="number" id="lt-percentage" min="0" max="100" value="40" onchange="updateWorkloadAnalysis()">
+                        <div class="parameter-info">Your assigned percentage for Learning & Teaching</div>
+                    </div>
+                    <div>
+                        <label>R&RT Allocation (%):</label>
+                        <input type="number" id="rrt-percentage" min="0" max="100" value="40" onchange="updateWorkloadAnalysis()">
+                        <div class="parameter-info">Your assigned percentage for Research & Research Training</div>
+                    </div>
+                    <div>
+                        <label>L&E Allocation (%):</label>
+                        <input type="number" id="le-percentage" min="0" max="100" value="20" onchange="updateWorkloadAnalysis()">
+                        <div class="parameter-info">Your assigned percentage for Leadership & Engagement</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>About This Calculator</h3>
+                <p>This calculator is based on the QUT Academic Learning & Teaching Workload Model (2025). It is designed to help you understand how your teaching workload is calculated and whether it aligns with your expected allocation.</p>
+                
+                <p><strong>Important:</strong> This calculator is for informational purposes only and should not replace your official workload document. All workload allocations should be confirmed with your Head of School.</p>
+                
+                <p>For the complete model documentation and official guidelines, please refer to:</p>
+                <ul>
+                    <li>Information page about the model by the university: <a href="https://qutvirtual4.qut.edu.au/group/staff/people/working-at-qut/academic-learning-and-teaching-workload-model" target="_blank">QUT Academic Learning and Teaching Workload Model</a></li>
+                    <li>Summary of the model on the same page: <a href="https://qutvirtual4.qut.edu.au/documents/4389321/26904757/Academic-Workload-Model-Summary.pdf/a64b8601-29c8-d8f9-3a13-14d8d980c69f?t=1693888701379" target="_blank">Two-page PDF summary of the model</a></li>
+                    <li>Your official workload allocation provided by your Head of School</li>
+                    <li>QUT Enterprise Agreement (Academic Staff) 2022-2025</li>
+                </ul>
+                
+                <div class="alert alert-info" style="margin-top: 20px;">
+                    <strong>Need Information?</strong> Your supervisor should provide you with all the details needed to complete this workload calculator, including your specific teaching allocations, marking responsibilities, and any additional activities. If this information hasn't been provided, consider discussing this with your Head of School.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Units Tab -->
+        <div id="units" class="tab-content">
+            <div class="alert alert-info">
+                <strong>Instructions:</strong> Add your units below and specify the teaching activities assigned to <STRONG>you</STRONG> for each. Enter only <strong>your</strong> allocated delivery hours for each activity. For example, if a unit has 4 tutorials, but you only teach 1 of them, enter the hours for 1 tutorial only. The system will automatically calculate Unit Core hours based on the parameters you select. <br><br>
+                <strong>Note:</strong> If your School uses a different marking allocation, you may need to adjust the marking parameter slightly. For instance, for a School that allocates 1 hour per student for marking, please use M3(Complex), rather than M2(Standard).<br><br>
+                <strong>Important:</strong> Your Head of School should provide you with all the information needed to complete this form. If this information hasn't been provided, this may be an issue to address with your supervisor.
+            </div>
+            
+            <button class="btn" onclick="addUnit()">+ Add New Unit</button>
+            
+            <div id="units-container">
+                <!-- Units will be dynamically added here -->
+            </div>
+        </div>
+        
+        <!-- Personalised Hours Tab -->
+        <div id="personalised" class="tab-content">
+            <div class="section">
+                <h3>Personalised Hours</h3>
+                <p>These are activities specific to you as an individual academic, not directly tied to unit delivery.</p>
+                
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="academic-dev" onchange="togglePersonalisedInput('academic-dev')">
+                        <label for="academic-dev">Academic Development</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="first-time" onchange="togglePersonalisedInput('first-time')">
+                        <label for="first-time">First Time Teaching/Coordinating Unit</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="moderation" onchange="togglePersonalisedInput('moderation')">
+                        <label for="moderation">Moderation of Assessments/Exams</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cpe-teaching" onchange="togglePersonalisedInput('cpe-teaching')">
+                        <label for="cpe-teaching">CPE Teaching</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="oes-support" onchange="togglePersonalisedInput('oes-support')">
+                        <label for="oes-support">Support to Online Education Services</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="qut-college" onchange="togglePersonalisedInput('qut-college')">
+                        <label for="qut-college">Support to QUT College</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="other-personalised" onchange="togglePersonalisedInput('other-personalised')">
+                        <label for="other-personalised">Other Activities</label>
+                    </div>
+                </div>
+                
+                <div id="personalised-inputs" style="margin-top: 20px;">
+                    <!-- Personalised hour inputs will appear here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary & Analysis Tab -->
+        <div id="summary" class="tab-content">
+            <div class="section">
+                <h3>Detailed Hours Summary</h3>
+                <button class="btn" onclick="calculateSummary()">Calculate Total Hours</button>
+                
+                <div id="summary-results">
+                    <!-- Summary table will appear here -->
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3>Workload Analysis</h3>
+                <button class="btn" onclick="analyzeWorkload()">Analyze Your Workload</button>
+                
+                <div id="workload-analysis-results">
+                    <!-- Analysis results will appear here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let unitCounter = 0;
+        let units = {};
+        
+        // Marking parameter reference table from the documents
+        const markingParameters = {
+            6: { M1: 0.25, M2: 0.5, M3: 0.75, M4: 1.0 },
+            12: { M1: 0.5, M2: 0.75, M3: 1.0, M4: 1.25 },
+            24: { M1: 0.75, M2: 1.0, M3: 1.25, M4: 1.5 }
+        };
+        
+        // Preparation time parameters
+        const preparationTimes = {
+            L1: 2.0, L2: 3.0, L3: 4.0,
+            T: 2.0,
+            W1: 0.0, W2: 1.0,
+            P1: 0.0, P2: 1.0,
+            RL: 1.0, RT: 1.0, RW: 0.0, RP: 0.0,
+            S1: 0.0, S2: 0.5
+        };
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function addUnit() {
+            unitCounter++;
+            const unitId = `unit-${unitCounter}`;
+            units[unitId] = {
+                name: '',
+                creditPoints: 6,
+                studentNumbers: 0,
+                activities: {},
+                additionalHours: {}
+            };
+            
+            const container = document.getElementById('units-container');
+            const unitCard = document.createElement('div');
+            unitCard.className = 'unit-card';
+            unitCard.id = unitId;
+            
+            unitCard.innerHTML = `
+                <div class="unit-header">
+                    <div class="unit-title">Unit ${unitCounter}</div>
+                    <button class="remove-unit" onclick="removeUnit('${unitId}')">Remove</button>
+                </div>
+                
+                <div class="form-row">
+                    <div>
+                        <label>Unit Name/Code:</label>
+                        <input type="text" id="${unitId}-name" onchange="updateUnit('${unitId}', 'name', this.value)">
+                    </div>
+                    <div>
+                        <label>Credit Points:</label>
+                        <select id="${unitId}-credits" onchange="updateUnit('${unitId}', 'creditPoints', parseInt(this.value))">
+                            <option value="6">6 CP</option>
+                            <option value="12">12 CP</option>
+                            <option value="24">24 CP</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Number of Students:</label>
+                        <input type="number" id="${unitId}-students" min="0" onchange="updateUnit('${unitId}', 'studentNumbers', parseInt(this.value))">
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Unit Core Activities</h3>
+                    
+                    <h4>Original Activities</h4>
+                    <div class="checkbox-group">
+                        ${generateActivityCheckboxes(unitId, 'original')}
+                    </div>
+                    
+                    <h4>Repeat Activities</h4>
+                    <div class="checkbox-group">
+                        ${generateActivityCheckboxes(unitId, 'repeat')}
+                    </div>
+                    
+                    <h4>Marking</h4>
+                    <div class="form-row">
+                        <div>
+                            <label>Marking Complexity:</label>
+                            <select id="${unitId}-marking" onchange="updateActivity('${unitId}', 'marking', this.value)">
+                                <option value="">No marking</option>
+                                <option value="M1">M1 - Less Complex</option>
+                                <option value="M2">M2 - Standard</option>
+                                <option value="M3">M3 - Complex</option>
+                                <option value="M4">M4 - More Complex</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Students <strong>You</strong> Will Mark:</label>
+                            <input type="number" class="hours-input" id="${unitId}-marking-students" min="0" onchange="updateActivity('${unitId}', 'markingStudents', parseInt(this.value))">
+                            <div class="parameter-info">Number of students whose work <strong>you</strong> will mark (not total unit enrollment)</div>
+                        </div>
+                    </div>
+                    
+                    <h4>Supervision</h4>
+                    <div class="form-row">
+                        <div>
+                            <label>Supervision Type:</label>
+                            <select id="${unitId}-supervision-type" onchange="updateActivity('${unitId}', 'supervisionType', this.value)">
+                                <option value="">No supervision</option>
+                                <option value="S1">S1 - Standard</option>
+                                <option value="S2">S2 - Complex</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Hours per Student per Semester:</label>
+                            <input type="number" class="hours-input" id="${unitId}-supervision-hours" min="0" step="0.5" onchange="updateActivity('${unitId}', 'supervisionHours', parseFloat(this.value))">
+                        </div>
+                    </div>
+                    
+                    <h4>Coordination</h4>
+                    <div class="form-row">
+                        <div>
+                            <label>Coordination Level:</label>
+                            <select id="${unitId}-coordination" onchange="updateCoordination('${unitId}', this.value)">
+                                <option value="">No coordination</option>
+                                <option value="C1">C1 - Low (10%)</option>
+                                <option value="C2">C2 - High (35%)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="${unitId}-coordination-info" class="parameter-info" style="margin-top: 10px;"></div>
+                    <div id="${unitId}-coordination-manual" style="display: none; margin-top: 10px;">
+                        <label>Manual Coordination Hours (Atypical):</label>
+                        <input type="number" class="hours-input" id="${unitId}-coordination-hours" min="0" step="0.5" onchange="updateActivity('${unitId}', 'coordinationHours', parseFloat(this.value))">
+                        <div class="parameter-info">Enter hours as determined by Head of School and Executive Dean</div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h3>Unit Additional Activities</h3>
+                    <div class="checkbox-group">
+                        ${generateUnitAdditionalCheckboxes(unitId)}
+                    </div>
+                    <div id="${unitId}-additional-inputs" style="margin-top: 15px;">
+                        <!-- Additional activity hour inputs will appear here -->
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(unitCard);
+        }
+
+        function generateActivityCheckboxes(unitId, type) {
+            const activities = {
+                original: [
+                    {id: 'L1', label: 'L1 - Basic Lecture', hours: true},
+                    {id: 'L2', label: 'L2 - Developed Lecture', hours: true},
+                    {id: 'L3', label: 'L3 - Specialised Lecture', hours: true},
+                    {id: 'T', label: 'T - Tutorial', hours: true},
+                    {id: 'W1', label: 'W1 - Workshop', hours: true},
+                    {id: 'W2', label: 'W2 - Workshop with preparation', hours: true},
+                    {id: 'P1', label: 'P1 - Practical/Studio/Other', hours: true},
+                    {id: 'P2', label: 'P2 - Practical/Studio/Other with prep', hours: true}
+                ],
+                repeat: [
+                    {id: 'RL', label: 'RL - Repeat Lecture', hours: true},
+                    {id: 'RT', label: 'RT - Repeat Tutorial', hours: true},
+                    {id: 'RW', label: 'RW - Repeat Workshop', hours: true},
+                    {id: 'RP', label: 'RP - Repeat Practical/Studio/Other', hours: true}
+                ]
+            };
+            
+            return activities[type].map(activity => `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="${unitId}-${activity.id}" onchange="toggleActivityInput('${unitId}', '${activity.id}')">
+                    <label for="${unitId}-${activity.id}">${activity.label}</label>
+                </div>
+            `).join('');
+        }
+
+        function generateUnitAdditionalCheckboxes(unitId) {
+            const activities = [
+                {id: 'parallel-teaching', label: 'Teaching in Parallel Online/On-campus'},
+                {id: 'new-unit', label: 'New Unit Development'},
+                {id: 'unit-refresh', label: 'Unit Refresh'},
+                {id: 'field-trips', label: 'Field Trips/Study Tours'},
+                {id: 'external-placements', label: 'External Student Placements'},
+                {id: 'atypical', label: 'Atypical Activities'},
+                {id: 'other-additional', label: 'Other Activities'}
+            ];
+            
+            return activities.map(activity => `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="${unitId}-${activity.id}" onchange="toggleUnitAdditionalInput('${unitId}', '${activity.id}')">
+                    <label for="${unitId}-${activity.id}">${activity.label}</label>
+                </div>
+            `).join('');
+        }
+
+        function toggleActivityInput(unitId, activityId) {
+            const checkbox = document.getElementById(`${unitId}-${activityId}`);
+            const inputId = `${unitId}-${activityId}-hours`;
+            
+            if (checkbox.checked) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'form-group';
+                inputDiv.id = `${inputId}-container`;
+                inputDiv.innerHTML = `
+                    <label>Your Allocated Delivery Hours for ${activityId}:</label>
+                    <input type="number" class="hours-input" id="${inputId}" min="0" step="0.5" onchange="updateActivityHours('${unitId}', '${activityId}', parseFloat(this.value))" placeholder="e.g., 12">
+                    <div class="parameter-info">Enter only the hours <strong>you</strong> will deliver (not total unit hours). Preparation time: ${preparationTimes[activityId]} hours per delivery hour (Total hours will be: delivery hours × ${1 + preparationTimes[activityId]})</div>
+                `;
+                checkbox.closest('.section').appendChild(inputDiv);
+            } else {
+                const container = document.getElementById(`${inputId}-container`);
+                if (container) container.remove();
+                if (units[unitId].activities[activityId]) {
+                    delete units[unitId].activities[activityId];
+                }
+            }
+        }
+
+        function toggleUnitAdditionalInput(unitId, activityId) {
+            const checkbox = document.getElementById(`${unitId}-${activityId}`);
+            const container = document.getElementById(`${unitId}-additional-inputs`);
+            const inputId = `${unitId}-${activityId}-hours`;
+            
+            if (checkbox.checked) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'form-group';
+                inputDiv.id = `${inputId}-container`;
+                inputDiv.innerHTML = `
+                    <label>Approved Hours for ${activityId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</label>
+                    <input type="number" class="hours-input" id="${inputId}" min="0" step="0.5" onchange="updateAdditionalHours('${unitId}', '${activityId}', parseFloat(this.value))">
+                `;
+                container.appendChild(inputDiv);
+            } else {
+                const inputContainer = document.getElementById(`${inputId}-container`);
+                if (inputContainer) inputContainer.remove();
+                if (units[unitId].additionalHours[activityId]) {
+                    delete units[unitId].additionalHours[activityId];
+                }
+            }
+        }
+
+        function togglePersonalisedInput(activityId) {
+            const checkbox = document.getElementById(activityId);
+            const container = document.getElementById('personalised-inputs');
+            const inputId = `${activityId}-hours`;
+            
+            if (checkbox.checked) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'form-group';
+                inputDiv.id = `${inputId}-container`;
+                inputDiv.innerHTML = `
+                    <label>Approved Hours for ${activityId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</label>
+                    <input type="number" class="hours-input" id="${inputId}" min="0" step="0.5">
+                `;
+                container.appendChild(inputDiv);
+            } else {
+                const inputContainer = document.getElementById(`${inputId}-container`);
+                if (inputContainer) inputContainer.remove();
+            }
+        }
+
+        function updateActivity(unitId, field, value) {
+            units[unitId].activities[field] = value;
+            
+            // Update coordination display if student numbers changed
+            if (field === 'coordination' || field === 'markingStudents') {
+                const coordSelect = document.getElementById(`${unitId}-coordination`);
+                if (coordSelect && coordSelect.value) {
+                    updateCoordination(unitId, coordSelect.value);
+                }
+            }
+        }
+        
+        function updateUnit(unitId, field, value) {
+            units[unitId][field] = value;
+            
+            // Update coordination display if student numbers changed
+            if (field === 'studentNumbers') {
+                const coordSelect = document.getElementById(`${unitId}-coordination`);
+                if (coordSelect && coordSelect.value) {
+                    updateCoordination(unitId, coordSelect.value);
+                }
+            }
+        }
+
+        function updateCoordination(unitId, value) {
+            units[unitId].activities.coordination = value;
+            const studentNumbers = units[unitId].studentNumbers || 0;
+            const infoDiv = document.getElementById(`${unitId}-coordination-info`);
+            const manualDiv = document.getElementById(`${unitId}-coordination-manual`);
+            
+            if (value) {
+                if (studentNumbers <= 5) {
+                    infoDiv.innerHTML = '<strong style="color: #ef4444;">Atypical Unit:</strong> ≤5 students requires Head of School determination';
+                    manualDiv.style.display = 'block';
+                    units[unitId].activities.isAtypical = true;
+                } else if (studentNumbers > 1100) {
+                    infoDiv.innerHTML = '<strong style="color: #ef4444;">Atypical Unit:</strong> >1100 students requires Head of School determination';
+                    manualDiv.style.display = 'block';
+                    units[unitId].activities.isAtypical = true;
+                } else {
+                    // Standard calculation
+                    let coordHours = 37.5; // Base coordination hours
+                    if (studentNumbers > 50) {
+                        const percentage = value === 'C1' ? 0.10 : 0.35;
+                        const variableHours = (studentNumbers - 50) * percentage;
+                        coordHours += variableHours;
+                    }
+                    infoDiv.innerHTML = `Standard calculation: 37.5 base hours${studentNumbers > 50 ? ` + ${((studentNumbers - 50) * (value === 'C1' ? 0.10 : 0.35)).toFixed(1)} variable hours` : ''} = <strong>${coordHours.toFixed(1)} hours</strong>`;
+                    manualDiv.style.display = 'none';
+                    units[unitId].activities.isAtypical = false;
+                    delete units[unitId].activities.coordinationHours;
+                }
+            } else {
+                infoDiv.innerHTML = '';
+                manualDiv.style.display = 'none';
+                units[unitId].activities.isAtypical = false;
+            }
+        }
+
+        function updateActivityHours(unitId, activityId, hours) {
+            if (!units[unitId].activities[activityId]) {
+                units[unitId].activities[activityId] = {};
+            }
+            units[unitId].activities[activityId] = { hours: hours };
+        }
+
+        function updateAdditionalHours(unitId, activityId, hours) {
+            units[unitId].additionalHours[activityId] = hours;
+        }
+
+        function removeUnit(unitId) {
+            document.getElementById(unitId).remove();
+            delete units[unitId];
+        }
+
+        function calculateUnitHours(unitId) {
+            const unit = units[unitId];
+            let totalHours = 0;
+            let breakdown = {};
+
+            // Calculate original and repeat activities
+            Object.keys(unit.activities).forEach(activityId => {
+                if (typeof unit.activities[activityId] === 'object' && unit.activities[activityId].hours) {
+                    const deliveryHours = unit.activities[activityId].hours;
+                    const prepTime = preparationTimes[activityId] || 0;
+                    const activityTotal = deliveryHours * (1 + prepTime);
+                    breakdown[activityId] = activityTotal;
+                    totalHours += activityTotal;
+                }
+            });
+
+            // Calculate marking
+            if (unit.activities.marking && unit.activities.markingStudents && markingParameters[unit.creditPoints]) {
+                const markingTime = markingParameters[unit.creditPoints][unit.activities.marking];
+                const markingTotal = markingTime * unit.activities.markingStudents;
+                breakdown.marking = markingTotal;
+                totalHours += markingTotal;
+            }
+
+            // Calculate supervision
+            if (unit.activities.supervisionType && unit.activities.supervisionHours) {
+                const supervisionBase = unit.activities.supervisionHours;
+                const supervisionPrep = preparationTimes[unit.activities.supervisionType] || 0;
+                const supervisionTotal = (1 + supervisionPrep) * supervisionBase * unit.studentNumbers;
+                breakdown.supervision = supervisionTotal;
+                totalHours += supervisionTotal;
+            }
+
+            // Calculate coordination
+            if (unit.activities.coordination) {
+                let coordHours = 0;
+                
+                if (unit.activities.isAtypical && unit.activities.coordinationHours) {
+                    // Manual atypical coordination hours
+                    coordHours = unit.activities.coordinationHours;
+                } else if (!unit.activities.isAtypical) {
+                    // Standard coordination calculation
+                    coordHours = 37.5; // Base coordination hours
+                    if (unit.studentNumbers > 50 && unit.studentNumbers <= 1100) {
+                        const percentage = unit.activities.coordination === 'C1' ? 0.10 : 0.35;
+                        const variableHours = (unit.studentNumbers - 50) * percentage;
+                        coordHours += variableHours;
+                    }
+                }
+                
+                if (coordHours > 0) {
+                    breakdown.coordination = coordHours;
+                    totalHours += coordHours;
+                }
+            }
+
+            // Add unit additional hours
+            Object.keys(unit.additionalHours).forEach(activityId => {
+                breakdown[`additional_${activityId}`] = unit.additionalHours[activityId];
+                totalHours += unit.additionalHours[activityId];
+            });
+
+            return { total: totalHours, breakdown: breakdown };
+        }
+
+        function analyzeWorkload() {
+            const summaryContainer = document.getElementById('workload-analysis-results');
+            let grandTotal = 0;
+            
+            // Calculate total L&T hours from units and personalised activities
+            Object.keys(units).forEach(unitId => {
+                const unitCalc = calculateUnitHours(unitId);
+                grandTotal += unitCalc.total;
+            });
+
+            // Add personalised hours
+            const personalisedActivities = ['academic-dev', 'first-time', 'moderation', 'cpe-teaching', 'oes-support', 'qut-college', 'other-personalised'];
+            personalisedActivities.forEach(activityId => {
+                const checkbox = document.getElementById(activityId);
+                const hoursInput = document.getElementById(`${activityId}-hours`);
+                
+                if (checkbox && checkbox.checked && hoursInput && hoursInput.value) {
+                    grandTotal += parseFloat(hoursInput.value);
+                }
+            });
+
+            // Get employment details
+            const fte = parseFloat(document.getElementById('fte').value) || 1.0;
+            const ltPercentage = parseFloat(document.getElementById('lt-percentage').value) || 40;
+            const rrtPercentage = parseFloat(document.getElementById('rrt-percentage').value) || 40;
+            const lePercentage = parseFloat(document.getElementById('le-percentage').value) || 20;
+
+            // Calculate expected hours
+            const totalWorkingHours = 1725 * fte; // 46 weeks × 37.5 hours × FTE
+            const expectedLTHours = (totalWorkingHours * ltPercentage) / 100;
+            const expectedRRTHours = (totalWorkingHours * rrtPercentage) / 100;
+            const expectedLEHours = (totalWorkingHours * lePercentage) / 100;
+            
+            // Calculate variance
+            const ltVariance = grandTotal - expectedLTHours;
+            const ltVariancePercentage = ((ltVariance / expectedLTHours) * 100);
+            
+            // Check if percentages add up to 100%
+            const totalPercentage = ltPercentage + rrtPercentage + lePercentage;
+            const percentageWarning = totalPercentage !== 100 ? 
+                `<div class="alert alert-info"><strong>Note:</strong> Your allocation percentages total ${totalPercentage}%. They should typically add up to 100%.</div>` : '';
+
+            let analysisHTML = `
+                ${percentageWarning}
+                <table class="summary-table" style="margin-top: 20px;">
+                    <thead>
+                        <tr><th>Workload Component</th><th>Details</th><th>Hours</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Employment Details</strong></td>
+                            <td>${fte} FTE (${(fte * 100)}%)</td>
+                            <td>${totalWorkingHours.toFixed(0)} total working hours</td>
+                        </tr>
+                        <tr style="background: #f9fafb;">
+                            <td>Learning & Teaching (Expected)</td>
+                            <td>${ltPercentage}% allocation</td>
+                            <td>${expectedLTHours.toFixed(0)} hours</td>
+                        </tr>
+                        <tr style="background: #f9fafb;">
+                            <td>Research & Research Training</td>
+                            <td>${rrtPercentage}% allocation</td>
+                            <td>${expectedRRTHours.toFixed(0)} hours</td>
+                        </tr>
+                        <tr style="background: #f9fafb;">
+                            <td>Leadership & Engagement</td>
+                            <td>${lePercentage}% allocation</td>
+                            <td>${expectedLEHours.toFixed(0)} hours</td>
+                        </tr>
+                        <tr class="${ltVariance > 50 ? 'alert' : ltVariance < -50 ? 'alert' : ''}">
+                            <td><strong>L&T Actual (from calculator)</strong></td>
+                            <td>Based on your unit entries</td>
+                            <td><strong>${grandTotal.toFixed(0)} hours</strong></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>L&T Variance</strong></td>
+                            <td>${ltVariance > 0 ? 'Over allocation' : 'Under allocation'}</td>
+                            <td><strong>${ltVariance > 0 ? '+' : ''}${ltVariance.toFixed(0)} hours (${ltVariancePercentage > 0 ? '+' : ''}${ltVariancePercentage.toFixed(1)}%)</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+
+            // Add interpretation
+            if (ltVariance <= 0) {
+                analysisHTML += `<div class="alert alert-success" style="margin-top: 20px;">
+                <strong>✓ Good Balance:</strong> Your L&T workload is equal to or under your expected allocation.
+                 </div>`;
+            } else {
+                 analysisHTML += `<div class="alert alert-warning" style="margin-top: 20px;">
+                    <strong>⚠ Over Allocated:</strong> Your L&T workload exceeds your expected allocation by ${Math.abs(ltVariance).toFixed(0)} hours. Consider discussing this with your Head of School.
+                  </div>`;
+            }
+
+            summaryContainer.innerHTML = analysisHTML;
+        }
+
+        function updateWorkloadAnalysis() {
+            // Auto-update analysis if results are already showing
+            const resultsContainer = document.getElementById('workload-analysis-results');
+            if (resultsContainer.innerHTML.trim() !== '') {
+                analyzeWorkload();
+            }
+        }
+
+        function calculateSummary() {
+            const summaryContainer = document.getElementById('summary-results');
+            let grandTotal = 0;
+            let summaryHTML = '<table class="summary-table"><thead><tr><th>Unit/Activity</th><th>Component</th><th>Hours</th></tr></thead><tbody>';
+
+            // Calculate unit hours
+            Object.keys(units).forEach(unitId => {
+                const unit = units[unitId];
+                const unitCalc = calculateUnitHours(unitId);
+                
+                summaryHTML += `<tr><td colspan="3" style="background: #e5e7eb; font-weight: bold;">${unit.name || `Unit ${unitId.split('-')[1]}`} (${unit.creditPoints} CP, ${unit.studentNumbers} students)</td></tr>`;
+                
+                Object.keys(unitCalc.breakdown).forEach(component => {
+                    const componentName = component.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    summaryHTML += `<tr><td></td><td>${componentName}</td><td>${unitCalc.breakdown[component].toFixed(2)}</td></tr>`;
+                });
+                
+                summaryHTML += `<tr style="background: #f3f4f6;"><td></td><td><strong>Unit Total</strong></td><td><strong>${unitCalc.total.toFixed(2)}</strong></td></tr>`;
+                grandTotal += unitCalc.total;
+            });
+
+            // Calculate personalised hours
+            let personalisedTotal = 0;
+            const personalisedActivities = ['academic-dev', 'first-time', 'moderation', 'cpe-teaching', 'oes-support', 'qut-college', 'other-personalised'];
+            
+            personalisedActivities.forEach(activityId => {
+                const checkbox = document.getElementById(activityId);
+                const hoursInput = document.getElementById(`${activityId}-hours`);
+                
+                if (checkbox && checkbox.checked && hoursInput && hoursInput.value) {
+                    const hours = parseFloat(hoursInput.value);
+                    const activityName = activityId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    summaryHTML += `<tr><td colspan="2">Personalised: ${activityName}</td><td>${hours.toFixed(2)}</td></tr>`;
+                    personalisedTotal += hours;
+                }
+            });
+
+            grandTotal += personalisedTotal;
+
+            summaryHTML += `
+                <tr class="total-row">
+                    <td colspan="2"><strong>TOTAL L&T ALLOCATION</strong></td>
+                    <td><strong>${grandTotal.toFixed(2)} hours</strong></td>
+                </tr>
+            </tbody></table>`;
+
+            summaryContainer.innerHTML = summaryHTML;
+        }
+
+        // Initialize with one unit
+        window.onload = function() {
+            // Don't automatically add a unit on load - let users add their own
+        };
+    </script>
+</body>
+</html>
